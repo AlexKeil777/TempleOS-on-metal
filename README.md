@@ -1,6 +1,6 @@
-# TempleOS on metal
 
-```text
+
+```
                                                         .'|
                                                       .'  |
                                __..--''^''--..__    .'  .'
@@ -12,8 +12,8 @@
                    _____                    _       ___  ____
                   |_   _|__ _ __ ___  _ __ | | ___ / _ \/ ___|
                     | |/ _ \ '_ ` _ \| '_ \| |/ _ \ | | \___ \
-                    | |  __/ | | | | | |_) | |  __/ |_| |___) |
-                    |_|\___|_| |_| |_| .__/|_|\___|\___/|____/
+                '   | |  __/ | | | | | |_) | |  __/ |_| |___) |
+                 \  |_|\___|_| |_| |_| .__/|_|\___|\___/|____/
                   '-.____.-'  .'  .' |_|           '-.____.-'
                             .'  .'
                           .'  .'
@@ -26,7 +26,12 @@
               '-.'
 ```
 
-USB stick images that run [TempleOS](https://templeos.org/) on real PCs instead of in a virtual machine, with its sound coming out of the PC's own speakers. They don't make TempleOS any prettier. They get Terry A. Davis's operating system running on real hardware, so you can have fun with it.
+
+
+
+# TempleOS on metal
+
+USB stick images that run [TempleOS](https://templeos.org/) on real PCs instead of in a virtual machine, with its sound coming out of the PC's own speakers (ideally). They don't make TempleOS any prettier. They get Terry A. Davis's operating system running on real hardware, so you can have fun with it - which is exactly what Terry would have wanted.
 
 Tested on an eMachines eM350 netbook and a Lenovo ThinkPad Edge E530c. Just want to boot it? Skip to [Quick start](#quick-start).
 
@@ -42,17 +47,15 @@ His illness also made him paranoid and often hostile online, and it made his las
 
 ## Not prettier, just running
 
-This repo doesn't try to make TempleOS pretty. There are no higher resolutions, no networking and no new look. TempleOS stays 640x480 in 16 colors (in the Charter's words, "a covenant"), ring-0-only, with its one voice of sound. Forks that modernize TempleOS exist, and this isn't one of them. The only changes are the ones it takes for Terry's TempleOS to run on real PCs and be heard on them.
+This repo doesn't try to make TempleOS pretty. It was never meant to be pretty. There are no higher resolutions, no networking and no new look. TempleOS stays 640x480 in 16 colors (in the Charter's words, "a covenant"), ring-0-only, with its one voice of sound - as Terry wanted it. Forks that modernize TempleOS exist, and this isn't one of them. The only changes are the ones it takes for Terry's TempleOS to run on real PCs and be heard on them - this is to honor the man's work and make it more accessible to the world, not to improve it.
 
 The point is to have fun with it: boot it on a real machine, write some HolyC, poke around a kernel where nothing is off limits, play the games. TempleOS's own welcome page says what it is for:
 
 > TempleOS is a x86_64, multi-cored, non-preemptive multi-tasking, ring-0-only, single-address_mapped (identity-mapped), operating system for recreational programming.
 
-Having fun with it on a real computer is exactly what Terry built it for.
 
-## Why it doesn't just run
 
-TempleOS is 64-bit only, but it boots the old way. Its start-up code runs in 16-bit real mode and asks the PC's BIOS for the memory map and the 640x480 VGA mode, and only then switches to 64-bit. So it needs both a 64-bit CPU and a BIOS, or a UEFI that can still pretend to be one (legacy or "CSM" boot). Not many PCs have both. Terry's FAQ says it "can run on some bare metal 64-bit PC's from about 2005-2010".
+TempleOS is 64-bit only, but it boots the old way. Its start-up code runs in 16-bit real mode and asks the PC's BIOS for the memory map and the 640x480 VGA mode, and only then switches to 64-bit. So it needs both a 64-bit CPU and a BIOS, or a UEFI that can still pretend to be one (legacy or "CSM" boot). Not many PCs have both. Terry's FAQ itself says it "can run on some bare metal 64-bit PC's from about 2005-2010".
 
 Even on such a PC, TempleOS has very few drivers:
 
@@ -63,28 +66,28 @@ Even on such a PC, TempleOS has very few drivers:
 
 ## What the images add
 
-- **Boots from a USB stick and runs from RAM.** The image's boot sector ([`boot.asm`](Lenovo%20ThinkPad%20E530c/boot.asm)) uses the BIOS to copy the whole TempleOS file system off the stick into RAM at 16 MB, then starts the kernel, which is built to use that RAM as drive `A:`. TempleOS still has no USB driver; this works around it.
-- **Sound on the real speakers.** [`SndHDA.HC`](Lenovo%20ThinkPad%20E530c/SndHDA.HC) plays TempleOS's sound on the HD Audio chip that most PCs since 2005 have, through every speaker, headphone and line-out socket. It plays exactly what TempleOS plays, one square-wave voice, with no interrupts and no timers.
+- **Boots from a USB stick and runs from RAM.** The image's boot sector ([`boot.asm`](<Lenovo%20ThinkPad%20E530c/boot.asm>)) uses the BIOS to copy the whole TempleOS file system off the stick into RAM at 16 MB, then starts the kernel, which is built to use that RAM as drive `A:`. TempleOS still has no USB driver; this works around it.
+- **Sound on the real speakers.** [`SndHDA.HC`](<Lenovo%20ThinkPad%20E530c/SndHDA.HC>) plays TempleOS's sound on the HD Audio chip that most PCs since 2005 have, through every speaker, headphone and line-out socket. It plays exactly what TempleOS plays, one square-wave voice, with no interrupts and no timers.
 - **Installs to the hard disk.** `HDInstall;` is TempleOS's own installer, but it finds the disk controller by itself. The ThinkPad version also reads back everything it wrote, to check it. The installed TempleOS keeps the sound and the fixes.
 - **Fixes for real hardware.** A few changes to TempleOS's own source. Each one is a "Source change" in the folder's `mkusb.py`, with the full story of why.
 
-| # | TempleOS file | Change | eM350 | ThinkPad |
-|:-:|---|---|:-:|:-:|
-| 1 | `Kernel/Mem/BlkPool.HC` | Start the heap above the RAM disk (USB boot only) | ✓ | ✓ |
-| 2 | `Kernel/KInts.HC` | Stock bug: every CPU core but the first looked up its APIC through junk the BIOS left in memory, and crashed at "MultiCore Start" | ✓ | ✓ |
-| 3 | `Kernel/KStart16.HC` | Stock bug: the BIOS memory map could be read from the wrong place | ✓ | ✓ |
-| 4 | `Adam/MakeAdam.HC` | Load the sound driver at boot | ✓ | ✓ |
-| 5 | `MakeHome.HC` | Load `HDInstall` at boot | ✓ | ✓ |
-| 6 | `Kernel/KStart32.HC` | Leave the BIOS's 32-bit PCI services alone; the ThinkPad's UEFI only imitates them | | ✓ |
-| 7 | `Kernel/BlkDev/DskATA.HC` | Move disk data 16 bits at a time; Intel's SATA chips since 2011 can't do 32 in IDE mode | | ✓ |
-| 8 | `Adam/ABlkDev/DskPrt.HC` | Stock bug: a failed partitioning went on to format the drive TempleOS was running from | | ✓ |
-| 9 | `Kernel/BlkDev/DskBlkDev.HC` | Read one block per disk command; more went wrong on the ThinkPad | | ✓ |
-| 10 | `Kernel/BlkDev/DskATA.HC` | Wait the 400 ns the ATA standard gives a disk to report that it's busy | | ✓ |
+| # | TempleOS file                  | Change                                                                                                                            | eM350 | ThinkPad |
+| :-: | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | :---: | :------: |
+| 1 | `Kernel/Mem/BlkPool.HC`      | Start the heap above the RAM disk (USB boot only)                                                                                 |  ✓  |    ✓    |
+| 2 | `Kernel/KInts.HC`            | Stock bug: every CPU core but the first looked up its APIC through junk the BIOS left in memory, and crashed at "MultiCore Start" |  ✓  |    ✓    |
+| 3 | `Kernel/KStart16.HC`         | Stock bug: the BIOS memory map could be read from the wrong place                                                                 |  ✓  |    ✓    |
+| 4 | `Adam/MakeAdam.HC`           | Load the sound driver at boot                                                                                                     |  ✓  |    ✓    |
+| 5 | `MakeHome.HC`                | Load `HDInstall` at boot                                                                                                        |  ✓  |    ✓    |
+| 6 | `Kernel/KStart32.HC`         | Leave the BIOS's 32-bit PCI services alone; the ThinkPad's UEFI only imitates them                                                |      |    ✓    |
+| 7 | `Kernel/BlkDev/DskATA.HC`    | Move disk data 16 bits at a time; Intel's SATA chips since 2011 can't do 32 in IDE mode                                           |      |    ✓    |
+| 8 | `Adam/ABlkDev/DskPrt.HC`     | Stock bug: a failed partitioning went on to format the drive TempleOS was running from                                            |      |    ✓    |
+| 9 | `Kernel/BlkDev/DskBlkDev.HC` | Read one block per disk command; more went wrong on the ThinkPad                                                                  |      |    ✓    |
+| 10 | `Kernel/BlkDev/DskATA.HC`    | Wait the 400 ns the ATA standard gives a disk to report that it's busy                                                            |      |    ✓    |
 
 ## Quick start
 
-1. **Pick an image.** If your PC is one of the [tested PCs](#tested-pcs), take the `TempleOS-USB.img` in its folder. For any other PC, start with the [ThinkPad image](Lenovo%20ThinkPad%20E530c/TempleOS-USB.img); it has every fix so far.
-2. **Flash it** to a USB stick with [Rufus](https://rufus.ie/) in "DD image" mode, [balenaEtcher](https://etcher.balena.io/) or `dd`. The image is 64 MB, and everything else on the stick is erased.
+1. **Pick an image.** If your PC is one of the [tested PCs](#tested-pcs), take the `TempleOS-USB.img` in its folder. For any other PC, start with the [ThinkPad image](<Lenovo%20ThinkPad%20E530c/TempleOS-USB.img>); it has every fix so far.
+2. **Flash it** to a USB stick with [Rufus](https://rufus.ie/) in "DD image" mode, [balenaEtcher](https://etcher.balena.io/) or `dd`. The image is 64 MB (Github already screams at me for uploading a file bigger than 50MB but whatever), and everything else on the stick is erased.
 3. **Set up the BIOS:** legacy (CSM) boot on, Secure Boot off, and SATA in IDE mode if TempleOS should see the hard disk.
 4. **Boot from the stick** with the PC's boot menu (F12 on a ThinkPad). It prints `TempleOS` and a row of dots while it copies itself into RAM, then TempleOS starts.
 
@@ -100,10 +103,10 @@ and then `YES`. **This erases the whole hard disk** and makes it TempleOS's driv
 
 ## Tested PCs
 
-| PC | Folder | Boots from USB | Installs to disk | Sound |
-|---|---|:-:|:-:|:-:|
-| eMachines eM350 netbook | [`Emachines EM350`](Emachines%20EM350/) | ✅ | 🧪 | 🧪 |
-| Lenovo ThinkPad Edge E530c | [`Lenovo ThinkPad E530c`](Lenovo%20ThinkPad%20E530c/) | ✅ | ✅ | 🧪 |
+| PC                         | Folder                                                   | Boots from USB | Installs to disk |      Sound      |
+| -------------------------- | -------------------------------------------------------- | :------------: | :--------------: | :--------------: |
+| eMachines eM350 netbook    | [`Emachines EM350`](<Emachines%20EM350/>)               |      yes      |       yes       |    beep boop    |
+| Lenovo ThinkPad Edge E530c | [`Lenovo ThinkPad E530c`](<Lenovo%20ThinkPad%20E530c/>) |      yes      |       yes       | no beep boop yet |
 
 ✅ works on the real PC · 🧪 passes the QEMU tests in `mkusb.py`, not confirmed on the real PC yet
 
@@ -142,20 +145,20 @@ How it works: `mkusb.py` boots the original ISO in QEMU and types one line. Temp
 
 ## What's in here
 
-- [`TempleOS original/`](TempleOS%20original/): Terry's TempleOS V5.03 ISO, unmodified (byte for byte the one [templeos.org](https://templeos.org/) offers)
-- [`Emachines EM350/`](Emachines%20EM350/): the eM350 image and everything that makes it
-- [`Lenovo ThinkPad E530c/`](Lenovo%20ThinkPad%20E530c/): the same for the ThinkPad
+- [`TempleOS original/`](<TempleOS%20original/>): Terry's TempleOS V5.03 ISO, unmodified (byte for byte the one [templeos.org](https://templeos.org/) offers)
+- [`Emachines EM350/`](<Emachines%20EM350/>): the eM350 image and everything that makes it
+- [`Lenovo ThinkPad E530c/`](<Lenovo%20ThinkPad%20E530c/>): the same for the ThinkPad
 
 Each PC's folder holds:
 
-| File | |
-|---|---|
-| `TempleOS-USB.img` | the image to flash |
-| `mkusb.py` | builds and tests the image |
-| `boot.asm` | the boot sector that copies TempleOS into RAM |
-| `SndHDA.HC` | the HD Audio sound driver, in HolyC |
-| `HDInstall.HC` | the hard disk installer, in HolyC |
-| `*-codec.txt` | the PC's sound chip as Linux describes it, for the tests |
+| File                 |                                                          |
+| -------------------- | -------------------------------------------------------- |
+| `TempleOS-USB.img` | the image to flash                                       |
+| `mkusb.py`         | builds and tests the image                               |
+| `boot.asm`         | the boot sector that copies TempleOS into RAM            |
+| `SndHDA.HC`        | the HD Audio sound driver, in HolyC                      |
+| `HDInstall.HC`     | the hard disk installer, in HolyC                        |
+| `*-codec.txt`      | the PC's sound chip as Linux describes it, for the tests |
 
 The eM350's folder also has its own copy of the original ISO, which its `mkusb.py` builds from, and `run.cmd`, which boots the unmodified ISO in QEMU on Windows.
 
@@ -171,4 +174,6 @@ The eM350's folder also has its own copy of the original ISO, which its `mkusb.p
 - [templeos.org](https://templeos.org/) and the TempleOS community, for keeping it available.
 - The people who posted the Linux codec dumps that the sound tests are built from (links in each `*-codec.txt`), and Linux's `ata_piix` driver, which does the same 16-bit disk fix.
 
-TempleOS itself is public domain.
+TempleOS itself is public domain, and so is this.
+
+RIP Terry
